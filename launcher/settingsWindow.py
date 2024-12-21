@@ -53,11 +53,18 @@ class SettingsWindow(QFrame):
 
         with open('.sl_password', 'r') as f:
             self.sl_password = f.read()
+        with open('configs/mirror.json', 'r') as f:
+            self.mirror_config = json.load(f)
 
         self.ui.javaPathLine.setText(self.settings_options["java_path"])
         ram_entry = int(self.settings_options["Xmx"] / 1024)
         self.ui.ramSpinBox.setValue(ram_entry)
         self.ui.slPasswordLine.setText(self.sl_password)
+        self.populate_mirror_combobox()
+        current_mirror = self.mirror_config.get("mirror", "default")  # Handle case where "mirror" is missing
+        index = self.ui.mirrorComboBox.findText(current_mirror)
+        if index != -1:
+            self.ui.mirrorComboBox.setCurrentIndex(index)
 
     def find_java(self):
         # Возможные пути для поиска Java
@@ -160,11 +167,16 @@ class SettingsWindow(QFrame):
         ram = self.ui.ramSpinBox.value()
         sl_password = self.ui.slPasswordLine.text()
         java_path = self.ui.javaPathLine.text()
+        mirror = self.ui.mirrorComboBox.currentText()
 
         # Сохраняем изменения в конфигурационный файл
         finally_ram = ram * 1024
         self.settings_options["Xmx"] = finally_ram
         self.settings_options["java_path"] = java_path
+        self.mirror_config["mirror"] = mirror
+
+        with open('configs/mirror.json', 'w') as f:
+            json.dump(self.mirror_config, f, indent=4)
 
         with open('.sl_password', 'w') as f:
             f.write(sl_password)
@@ -172,6 +184,19 @@ class SettingsWindow(QFrame):
         with open('configs/client_config.json', 'w') as f:
             json.dump(self.settings_options, f, indent=4)
         QMessageBox.information(self, "Setting Message", "Сохранение прошло успешно!", )
+
+    def populate_mirror_combobox(self):
+        try:
+            response = requests.get("https://raw.githubusercontent.com/Sesdear/Drist_Sources/manifests/launcher_ip.json")
+            response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+            data = response.json()
+            self.ui.mirrorComboBox.addItems(data.keys())  # Add keys as items to the combobox
+        except requests.exceptions.RequestException as e:
+            QMessageBox.warning(self, "Ошибка", f"Ошибка загрузки данных с GitHub: {e}")
+            print(f"Ошибка загрузки данных с GitHub: {e}")
+        except json.JSONDecodeError as e:
+            print(f"Ошибка разбора JSON: {e}")
+            QMessageBox.warning(self, "Ошибка", f"Ошибка разбора JSON: {e}")
 
     def path_browse_button_clicked(self) -> None:
         fileName, _ = QFileDialog.getOpenFileName(self, 'Single File', QtCore.QDir.rootPath(), '*.exe')
