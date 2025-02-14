@@ -42,10 +42,7 @@ def getServerIp():
     data = manifest_reader.readMinecraftManifest("configs/manifests/launcher_ip.json")
     mirror = manifest_reader.readMinecraftManifest("configs/mirror.json")["mirror"]
     ipstring = data[mirror]
-    if ipstring != "playit":
-        ip, port = splitIp(ipstring)
-    else:
-        ip = ipstring
+    ip, port = splitIp(ipstring)
 
     return ip
 def getServerPort():
@@ -54,16 +51,11 @@ def getServerPort():
     data = manifest_reader.readMinecraftManifest("configs/manifests/launcher_ip.json")
     mirror = manifest_reader.readMinecraftManifest("configs/mirror.json")["mirror"]
     ipstring = data[mirror]
-    if ipstring != "playit":
-        ip, port = splitIp(ipstring)
-    else:
-        port = "playit"
+    ip, port = splitIp(ipstring)
 
     return port  # "localhost"
 
 def constructServerAdress(ip: str, port) -> str:
-    if port == "playit":
-        return f"http://{ip}"
     return f"http://{ip}:{port}"
 def getMinecraftManifest(url: str):
     print("mine_mani")

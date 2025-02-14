@@ -76,6 +76,9 @@ def download_server_dat():
     except Exception as e:
         print(f"Error while deleting temp Folder: {e}")
 
+
+
+
 def start_minecraft():
     try:
         download_server_dat()
@@ -119,6 +122,8 @@ def start_minecraft():
 
     print(options)
 
+
+
     minecraft_command = mll.command.get_minecraft_command(
         f"{minecraft_version}-{modloader}-{modloader_version}",
         minecraft_directory,
@@ -129,3 +134,5 @@ def start_minecraft():
         subprocess.Popen(minecraft_command)
     except Exception as e:
         print(e)
+
+
