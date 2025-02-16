@@ -6,8 +6,39 @@ import zipfile
 import mainWindow
 
 import requests
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMessageBox
 
+
+def check_path_for_cyrillic(path):
+    """
+    Проверяет путь на наличие кириллических символов.
+    Если найдены, показывает окно с ошибкой.
+
+    :param path: Строка с путем для проверки
+    :return: True если путь корректен, False если найдены кириллические символы
+    """
+    for char in path:
+        if 'А' <= char <= 'я' or char in 'ёЁ':
+            show_error_message()
+            return False
+    return True
+
+
+def show_error_message():
+
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Icon.Critical)
+    msg_box.setWindowTitle("Ошибка")
+    msg_box.setText("Путь к программе содержит кириллические символы!")
+    msg_box.setInformativeText("Переместите программу в папку с латинскими символами.")
+    msg_box.exec()
+
+
+def get_current_program_path():
+    """
+    Возвращает абсолютный путь к текущей программе.
+    """
+    return os.path.abspath(__file__)
 
 def download_icons():
     repo_url = 'https://codeload.github.com/Sesdear/Drist_Sources/zip/refs/heads/Icons'
@@ -69,6 +100,7 @@ def download_ui():
     except Exception as e:
         print(f"Error while deleting temp Ui files: {e}")
 
+
 def create_folders():
     create_minecraft_folder = "minecraft"
 
@@ -105,6 +137,7 @@ def create_jsons():
     if not os.path.exists(json_file_path_minecraft_configs):
         with open(json_file_path_minecraft_configs, 'w') as f:
             json.dump({
+                "debug": False,
                 "slPassword": None,
                 "Xms": 2048,
                 "Xmx": 4096,
@@ -142,12 +175,22 @@ def create_slPassword():
 
 
 if __name__ == '__main__':
+    import sys
+
+    app = QApplication(sys.argv)
+
+    current_path = get_current_program_path()
+
+    if not check_path_for_cyrillic(current_path):
+        sys.exit(1)
+
     create_folders()
     create_jsons()
     create_slPassword()
     download_ui()
     download_icons()
-    app = QApplication(sys.argv)
+
     window = mainWindow.MainWindow()
     window.show()
+
     sys.exit(app.exec())
